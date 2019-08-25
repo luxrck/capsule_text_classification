@@ -107,7 +107,10 @@ class BatchGenerator(object):
       self._cursor += self._batch_size
       return batch_x, batch_y
 
-train, train_label, test, test_label, dev, dev_label, w2v= load_data(args.dataset)    
+#train, train_label, test, test_label, dev, dev_label, w2v= load_data(args.dataset)    
+from weibo_process import load_data_weibo_typeA
+train, train_label, test, test_label, dev, dev_label, w2v, args.num_classes= load_data_weibo_typeA(args.dataset)    
+
 
 args.vocab_size = len(w2v)
 args.vec_size = w2v[0].shape[0]
