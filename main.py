@@ -127,7 +127,7 @@ with tf.device('/cpu:0'):
 
 label = ['-1', 'earn', 'money-fx', 'trade', 'acq', 'grain', 'interest', 'crude', 'ship']
 label = map(str,label)
-args.max_sent = 200
+args.max_sent = 32
 threshold = 0.5
 
 X = tf.placeholder(tf.int32, [args.batch_size, args.max_sent], name="input_x")
@@ -210,12 +210,24 @@ best_acc_val = 0.
 init = tf.global_variables_initializer()
 sess.run(init)     
 
+
+def to_cat(y, dim):
+    b = len(y)
+    o = np.zeros((b, dim), dtype="float32")
+    for i in range(b):
+        for v in y[i]:
+            o[i][v] = 1.
+    return o
+
+
 lr = args.learning_rate
 m = args.margin
 for epoch in range(args.num_epochs):
     for iteration in range(1, n_iterations_per_epoch + 1):                
         X_batch, y_batch = mr_train.next()     
-        y_batch = utils.to_categorical(y_batch, args.num_classes)        
+        #import pdb; pdb.set_trace()
+        y_batch = to_cat(y_batch, args.num_classes)
+        #y_batch = utils.to_categorical(y_batch, args.num_classes)        
         _, loss_train, probs, capsule_pose = sess.run(
             [training_op, loss, activations, poses],
             feed_dict={X: X_batch[:,:args.max_sent],
@@ -231,7 +243,8 @@ for epoch in range(args.num_epochs):
     loss_vals, acc_vals = [], []
     for iteration in range(1, n_iterations_dev + 1):
         X_batch, y_batch = mr_dev.next()            
-        y_batch = utils.to_categorical(y_batch, args.num_classes)
+        y_batch = to_cat(y_batch, args.num_classes)
+        #y_batch = utils.to_categorical(y_batch, args.num_classes)
         loss_val, acc_val = sess.run(
                 [loss, accuracy],
                 feed_dict={X: X_batch[:,:args.max_sent],
@@ -247,6 +260,7 @@ for epoch in range(args.num_epochs):
     preds_list, y_list = [], []
     for iteration in range(1, n_iterations_test + 1):
         X_batch, y_batch = mr_test.next()             
+        y_batch = to_cat(y_batch, args.num_classes)
         probs = sess.run([activations],
                 feed_dict={X:X_batch[:,:args.max_sent],
                            is_training: False})
